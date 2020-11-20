@@ -1,16 +1,8 @@
 import asyncio
-import json
+
 import motor.motor_asyncio as aiomotor
 from aiohttp import web
 from bson import ObjectId
-from utils import init_mongo
-
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
 
 
 class SiteHandler:
@@ -22,39 +14,12 @@ class SiteHandler:
         await self.mongo.insert_one(product)
         return web.json_response("OK")
 
-    async def get_by_filter(self, request):
-        dict_query = request.query
-        d = dict_query.copy()
-
-        dict_for_search = {}
-
-        try:
-            dict_for_search["name"] = d.pop("name")
-        except KeyError:
-            pass
-        try:
-            dict_for_search["desc"] = d.pop("desc")
-        except KeyError:
-            pass
-
-        if d:
-            dict_for_search["parameters"] = {}
-            for k in d:
-                dict_for_search["parameters"][k] = d[k]
-
-        # dict_for_search = {
-        #     'name': name,
-        #     'desc': desc,
-        #     'parameters': d
-        # }
-
-        print(dict_for_search)
-        documents = self.mongo.find(dict_for_search)
-        names = []
-        for document in await documents.to_list(length=None):
-            names.append(document["name"])
-
-        return web.json_response(names)
+    async def get_all(self, request):
+        all_products = self.mongo.find({})
+        names_and_id = []
+        for product in await all_products.to_list(length=None):
+            names_and_id.append((product["name"], str(product["_id"])))
+        return web.json_response(names_and_id)
 
     async def get_by_id(self, request):
         _id = request.match_info["id"]
@@ -62,11 +27,26 @@ class SiteHandler:
         document["_id"] = _id
         return web.json_response(document)
 
-    async def get_all(self, request):
-        result = self.mongo.find({})
-        data = await result.to_list(length=None)
-        d = JSONEncoder().encode(data)
-        return web.json_response(d)
+    async def get_by_filter(self, request):
+        dict_query = request.query.copy()
+        dict_for_search = {}
+        try:
+            dict_for_search["name"] = dict_query.pop("name")
+        except KeyError:
+            pass
+        try:
+            dict_for_search["desc"] = dict_query.pop("desc")
+        except KeyError:
+            pass
+        if dict_query:
+            dict_for_search["parameters"] = {}
+            for k in dict_query:
+                dict_for_search["parameters"][k] = dict_query[k]
+        documents = self.mongo.find(dict_for_search)
+        names = []
+        for document in await documents.to_list(length=None):
+            names.append(document["name"])
+        return web.json_response(names)
 
 
 async def init():
@@ -77,10 +57,10 @@ async def init():
     handler = SiteHandler(mongo)
     app.add_routes(
         [
-            web.get("/products/{id}", handler.get_by_id),
-            web.get("/products/", handler.get_by_filter),
-            web.post("/products", handler.post),
-            web.get("/products", handler.get_all),
+            web.get("/product/{id}", handler.get_by_id),
+            web.get("/product/", handler.get_by_filter),
+            web.post("/product", handler.post),
+            web.get("/product", handler.get_all),
         ]
     )
     return app

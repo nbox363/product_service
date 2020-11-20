@@ -1,21 +1,26 @@
 import asyncio
 
-from utils import init_mongo
+import motor.motor_asyncio as aiomotor
+from bson import ObjectId
 
 
 async def init_data():
-    collection_product = await init_mongo()
+    client = aiomotor.AsyncIOMotorClient("mongodb://localhost:27017")
+    db = client["product_service"]
+    collection_product = db["product"]
     p = {
-        "_id": 1,
-        "name": "iPhone",
+        "_id": ObjectId(),
+        "name": "iphone",
         "desc": "The iPhone is a smartphone made by Apple that combines a computer",
-        "parameters": {"brand": "apple", "manufacturer": "USA"},
+        "parameters": {"size": "10", "brand": "apple"},
     }
     await collection_product.insert_one(p)
 
 
 async def do_delete_all_documents():
-    collection_product = await init_mongo()
+    client = aiomotor.AsyncIOMotorClient("mongodb://localhost:27017")
+    db = client["product_service"]
+    collection_product = db["product"]
     await collection_product.delete_many({})
 
 
