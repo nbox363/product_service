@@ -9,3 +9,11 @@ repos:
     rev: 19.3b0
     hooks:
     -   id: black
+# -   repo: local
+#     hooks:
+#     -   id: pytest
+#         name: pytest
+#         entry: venv/bin/pytest
+#         language: script
+#         pass_filenames: false
+#         always_run: true
