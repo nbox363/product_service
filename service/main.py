@@ -28,7 +28,7 @@ class SiteHandler:
         return web.json_response(document)
 
     async def get_by_filter(self, request):
-        dict_query = request.query.copy()
+        dict_query = await request.json()
         dict_for_search = {}
         try:
             dict_for_search["name"] = dict_query.pop("name")
@@ -42,6 +42,7 @@ class SiteHandler:
             dict_for_search["parameters"] = {}
             for k in dict_query:
                 dict_for_search["parameters"][k] = dict_query[k]
+
         documents = self.mongo.find(dict_for_search)
         names = []
         for document in await documents.to_list(length=None):
@@ -58,9 +59,9 @@ async def init():
     app.add_routes(
         [
             web.get("/product/{id}", handler.get_by_id),
-            web.get("/product/", handler.get_by_filter),
+            web.get("/product", handler.get_by_filter),
             web.post("/product", handler.post),
-            web.get("/product", handler.get_all),
+            web.get("/products", handler.get_all),
         ]
     )
     return app

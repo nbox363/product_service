@@ -48,7 +48,7 @@ get all products
 ```bash
 curl --header "Content-Type: application/json" \
  --request GET \
- http://0.0.0.0:8080/product
+ http://0.0.0.0:8080/products
 ```
 
 get by id
@@ -68,5 +68,6 @@ get by filter
 ```bash
 curl --header "Content-Type: application/json" \
  --request GET \
- http://0.0.0.0:8080/product/\?name\=iphone&size=10&brand=apple
+ --data {"size":"10", "brand":"apple"}' \
+ http://0.0.0.0:8080/product
 ```
